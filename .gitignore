@@ -5,3 +5,4 @@
 schemas.xlsx
 ~$schemas.xlsx
 .venv
+.cache
