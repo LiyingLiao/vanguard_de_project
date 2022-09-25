@@ -1,0 +1,22 @@
+seeds = [
+    'Ed Sheeran',
+    'Jason Mraz',
+    'Adele',
+    'Maroon 5',
+    'Lana Del Ray',
+    'Cold Play',
+    'Imagine Dragon',
+    'James Blunt',
+    'Black Pink',
+    'Katy Perry',
+    'Pink',
+    'Travis',
+    'Rihanna',
+    'Dua Lipa',
+    'Lady Gaga',
+    'Taylor Swift',
+    'Ariana Grande',
+    'Billie Eilish',
+    'Travis Scott',
+    'One direction'
+]
