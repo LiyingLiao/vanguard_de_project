@@ -3,7 +3,7 @@ seeds = [
     'Jason Mraz',
     'Adele',
     'Maroon 5',
-    'Lana Del Ray',
+    'Lana Del Rey',
     'Cold Play',
     'Imagine Dragon',
     'James Blunt',

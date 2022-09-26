@@ -22,6 +22,7 @@ def fetch_artist(artist_name, spotify):
     artist_search_result = spotify.search(q=f'artist:{artist_name}', limit=1, type='artist')
     artist_list = artist_search_result['artists']['items']
     if len(artist_list) == 0:
+        print("cannot find artist associated with: ", artist_name)
         return None
     
     artist_raw = artist_list[0]
@@ -184,19 +185,96 @@ def load_tracks_to_db(tracks, db_conn):
         }
     )
 
+
+def transform_track_features(track_features_raw):
+    track_features = {
+        'track_id': track_features_raw['id'],
+        'danceability': track_features_raw['danceability'],
+        'energy': track_features_raw['energy'],
+        'instrumentalness': track_features_raw['instrumentalness'], 
+        'liveness': track_features_raw['liveness'],
+        'loudness': track_features_raw['loudness'],
+        'speechiness': track_features_raw['speechiness'],
+        'tempo': track_features_raw['tempo'],
+        'type': track_features_raw['type'],
+        'valence': track_features_raw['valence'],
+        'song_uri': track_features_raw['uri']
+    }
+
+    return track_features
+
+
+def fetch_features_for_all_tracks(tracks, spotify):
+    track_ids = [t['track_id'] for t in tracks]
+
+    # spotipy.audio_features can only support 100 ids per time, will group ids into batches of 100.
+    # last batch may be less than 100, 
+    
+    all_tracks_features_nested = []
+
+    for i in range(0, len(track_ids), 100):
+        tracks_features_raw = spotify.audio_features(track_ids[i:i+100])
+        transformed_track_features = [transform_track_features(tfr) for tfr in tracks_features_raw]
+        all_tracks_features_nested.append(transformed_track_features)
+
+    # # deal with the last batch
+    # last_batch_size = len(track_ids) % 100
+    # # factor out these 3 lines to a function.
+    # tracks_features_raw = spotify.audio_features(track_ids[-last_batch_size:])
+    # transformed_track_features = [transform_track_features(tfr) for tfr in tracks_features_raw]
+    # all_tracks_features_nested.append(transformed_track_features)
+
+    all_tracks_features = list(np.concatenate(all_tracks_features_nested).flat)
+    return all_tracks_features
+    
+
+def load_tracks_features_to_db(tracks_features, db_conn):
+    tracks_features_df = pd.DataFrame(tracks_features)
+    tracks_features_df.to_sql(
+        name='track_feature', 
+        con=db_conn, 
+        if_exists='replace', 
+        index=False,
+        # Following https://www.sqlite.org/datatype3.html to translate the required datatypes to sqlite3 types.
+        dtype={
+            'track_id': 'TEXT',
+            'danceability': 'REAL',
+            'energy': 'REAL',
+            'instrumentalness': 'REAL',
+            'liveness': 'REAL',
+            'loudness': 'REAL',
+            'speechiness': 'REAL',
+            'tempo': 'REAL',
+            'type': 'TEXT',
+            'valence': 'REAL',
+            'song_uri': 'TEXT'
+        }
+    )
+
+
 if __name__ == '__main__':
     # Step 1: Create the datasets.
     spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
     
     artists = fetch_artists(seeds, spotify)
+    print("artists_size: ",len(artists))
     albums = fetch_albums_for_all_artists(artists, spotify)
+    print("albums_size: ",len(albums))
     tracks = fetch_tracks_for_all_albums(albums, spotify)
+    print("tracks_size: ",len(tracks))
+    track_features = fetch_features_for_all_tracks(tracks, spotify)
+    print("track_features_size: ",len(track_features))
+
+    print("All datasets are ready to be imported into db!!!")
 
     # Step 2: Write the datasets to DB.
     db_conn = sqlite3.connect('spotify.db')
+    print("connected to db!!!")
     load_artists_to_db(artists, db_conn)
     load_albums_to_db(albums, db_conn)
     load_tracks_to_db(tracks, db_conn)
+    load_tracks_features_to_db(track_features, db_conn)
+    print("finished loading to db!!!")
 
     
 
