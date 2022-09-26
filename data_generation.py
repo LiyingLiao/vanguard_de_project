@@ -129,16 +129,78 @@ def load_albums_to_db(albums, db_conn):
         }
     )
 
+def fetch_tracks_by_album(album_id, spotify):
+    tracks_search_result =  spotify.album_tracks(album_id=album_id, limit=50, offset=0)
+    tracks_list_raw = tracks_search_result['items']
+
+    tracks_list = []
+
+    for track_raw in tracks_list_raw:
+        track = {
+            'track_id': track_raw['id'],
+            'song_name': track_raw['name'],
+            'external_url': track_raw['external_urls']['spotify'],
+            'duration_ms': track_raw['duration_ms'], 
+            'explicit': track_raw['explicit'],
+            'disc_number': track_raw['disc_number'],
+            'type': track_raw['type'],
+            'song_uri': track_raw['uri'],
+            'album_id': album_id
+        }
+        tracks_list.append(track)
+
+    return tracks_list
+
+
+def fetch_tracks_for_all_albums(albums, spotify):
+    all_tracks_nested = []
+
+    for album in albums:
+        fetched_tracks = fetch_tracks_by_album(album['album_id'], spotify)
+        all_tracks_nested.append(fetched_tracks)
+
+    all_tracks = list(np.concatenate(all_tracks_nested).flat)
+    return all_tracks
+
+
+def load_tracks_to_db(tracks, db_conn):
+    tracks_df = pd.DataFrame(tracks)
+    tracks_df.to_sql(
+        name='track', 
+        con=db_conn, 
+        if_exists='replace', 
+        index=False,
+        # Following https://www.sqlite.org/datatype3.html to translate the required datatypes to sqlite3 types.
+        dtype={
+            'track_id': 'TEXT',
+            'song_name': 'TEXT',
+            'external_url': 'TEXT',
+            'duration_ms': 'INTEGER',
+            'explicit': 'NUMERIC', # use text for now, convert to date type later
+            'disc_number': 'INTEGER',
+            'type': 'TEXT',
+            'song_uri': 'TEXT',
+            'album_id': 'TEXT'
+        }
+    )
+
 if __name__ == '__main__':
     # Step 1: Create the datasets.
     spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
     
     artists = fetch_artists(seeds, spotify)
-    albums = fetch_albums_for_all_artists(artists=artists, spotify=spotify)
+    albums = fetch_albums_for_all_artists(artists, spotify)
+    tracks = fetch_tracks_for_all_albums(albums, spotify)
 
     # Step 2: Write the datasets to DB.
     db_conn = sqlite3.connect('spotify.db')
     load_artists_to_db(artists, db_conn)
     load_albums_to_db(albums, db_conn)
+    load_tracks_to_db(tracks, db_conn)
+
+    
 
     # print(len(albums))
+
+    # res = spotify.album_tracks(album_id='2FfewmvnA0wctMD64KjOxP', limit=50, offset=0)
+    # pprint.pprint(res['items'][0])
