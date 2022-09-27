@@ -98,22 +98,25 @@ def fetch_albums_by_artist(artist, spotify):
 
     return albums_list
 
-# Deduplicate the given albums by their album IDs and return deduplicated albums.
+# Deduplicate the given albums by their album names and return deduplicated albums.
+#
+# Can't deduplicate based on IDs since the same album may have different IDs (release version etc.)
+# causing the same album to appear twice if based on ID.
 def deduplicate_albums(albums):
     unique_albums = []
-    visited_ids = set()
+    visited_names = set()
 
     for album in albums:
-        album_id = album['album_id']
-        if album_id not in visited_ids:
+        album_name = album['album_name']
+        if album_name not in visited_names:
             unique_albums.append(album)
-            visited_ids.add(album_id)
+            visited_names.add(album_name)
     
     return unique_albums
 
 # Fetch albums across all artists.
 #
-# Final albums are deduplicated based on their IDs.
+# Final albums are deduplicated based on their names.
 def fetch_albums_for_all_artists(artists, spotify):
     all_albums_nested = []
 
@@ -169,16 +172,18 @@ def fetch_tracks_by_album(album_id, spotify):
 
     return tracks_list
 
-# Deduplicate the given tracks based on their IDs.
+# Deduplicate the given tracks based on their names.
+#
+# Same track may have different IDs, so can't deduplicate tracks based on ID.
 def deduplicate_tracks(tracks):
     unique_tracks = []
-    visited_ids = set()
+    visited_names = set()
 
     for track in tracks:
-        track_id = track['track_id']
-        if track_id not in visited_ids:
+        track_name = track['song_name']
+        if track_name not in visited_names:
              unique_tracks.append(track)
-             visited_ids.add(track_id)
+             visited_names.add(track_name)
     
     return unique_tracks
 
@@ -246,8 +251,9 @@ def fetch_features_for_all_tracks(tracks, spotify):
     all_tracks_features_nested = []
 
     for i in range(0, len(track_ids), 100):
+        # It's possible that a track may NOT have feature, in which case the returned element is None.
         tracks_features_raw = spotify.audio_features(track_ids[i:i+100])
-        transformed_track_features = [transform_track_features(tfr) for tfr in tracks_features_raw]
+        transformed_track_features = [transform_track_features(tfr) for tfr in tracks_features_raw if tfr is not None]
         all_tracks_features_nested.append(transformed_track_features)
 
     # # deal with the last batch
@@ -286,7 +292,7 @@ def load_tracks_features_to_db(tracks_features, db_conn):
 
 
 if __name__ == '__main__':
-    # Step 1: Create the datasets.
+    # # Step 1: Create the datasets.
     spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
     
     artists = fetch_artists(seeds, spotify)

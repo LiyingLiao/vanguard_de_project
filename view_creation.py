@@ -40,7 +40,7 @@ def create_top_songs_by_artist_duration_view(cur):
                     song_name,
                     duration_ms
                 FROM artist_songs_ranked
-                WHERE rn <= 5
+                WHERE rn <= 10
             )
             SELECT 
                 a.artist_name AS artist_name,
@@ -82,7 +82,7 @@ def create_top_songs_by_artist_tempo_view(cur):
                     song_name,
                     tempo
                 FROM artist_songs_ranked
-                WHERE rn <= 5
+                WHERE rn <= 10
             )
             SELECT 
                 a.artist_name AS artist_name,
