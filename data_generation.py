@@ -41,15 +41,19 @@ def fetch_artist(artist_name, spotify):
     return artist
 
 # Fetches a list of artists in dict representation from the given artist_names.
+#
+# Deduplicate the artists by their IDs.
 def fetch_artists(artist_names, spotify):
-    fetched_artists = []
+    artists = []
+    visited_ids = set()
 
     for artist_name in artist_names:
-        fetched_artist = fetch_artist(artist_name, spotify)
-        if fetched_artist is not None:
-            fetched_artists.append(fetched_artist)
+        artist = fetch_artist(artist_name, spotify)
+        if artist is not None and artist['artist_id'] not in visited_ids:
+            artists.append(artist)
+            visited_ids.add(artist['artist_id'])
 
-    return fetched_artists
+    return artists
 
 def load_artists_to_db(artists, db_conn):
     artists_df = pd.DataFrame(artists)
@@ -71,12 +75,9 @@ def load_artists_to_db(artists, db_conn):
             'artist_uri': 'TEXT'
         }
     )
-
-
-
-
+    
 def fetch_albums_by_artist(artist, spotify):
-    albums_search_result = spotify.artist_albums(artist_id = artist['artist_uri'], album_type = 'album', country = 'US')
+    albums_search_result = spotify.artist_albums(artist_id=artist['artist_uri'], album_type='album', country='US')
     albums_list_raw = albums_search_result['items']
 
     albums_list = []
@@ -97,7 +98,22 @@ def fetch_albums_by_artist(artist, spotify):
 
     return albums_list
 
+# Deduplicate the given albums by their album IDs and return deduplicated albums.
+def deduplicate_albums(albums):
+    unique_albums = []
+    visited_ids = set()
 
+    for album in albums:
+        album_id = album['album_id']
+        if album_id not in visited_ids:
+            unique_albums.append(album)
+            visited_ids.add(album_id)
+    
+    return unique_albums
+
+# Fetch albums across all artists.
+#
+# Final albums are deduplicated based on their IDs.
 def fetch_albums_for_all_artists(artists, spotify):
     all_albums_nested = []
 
@@ -106,7 +122,8 @@ def fetch_albums_for_all_artists(artists, spotify):
         all_albums_nested.append(fetched_albums)
 
     all_albums = list(np.concatenate(all_albums_nested).flat)
-    return all_albums
+    unique_albums = deduplicate_albums(all_albums)
+    return unique_albums
 
 
 def load_albums_to_db(albums, db_conn):
@@ -152,7 +169,22 @@ def fetch_tracks_by_album(album_id, spotify):
 
     return tracks_list
 
+# Deduplicate the given tracks based on their IDs.
+def deduplicate_tracks(tracks):
+    unique_tracks = []
+    visited_ids = set()
 
+    for track in tracks:
+        track_id = track['track_id']
+        if track_id not in visited_ids:
+             unique_tracks.append(track)
+             visited_ids.add(track_id)
+    
+    return unique_tracks
+
+# Fetch all tracks across all albums.
+#
+# Final tracks are deduplicated based on their IDs.
 def fetch_tracks_for_all_albums(albums, spotify):
     all_tracks_nested = []
 
@@ -161,7 +193,8 @@ def fetch_tracks_for_all_albums(albums, spotify):
         all_tracks_nested.append(fetched_tracks)
 
     all_tracks = list(np.concatenate(all_tracks_nested).flat)
-    return all_tracks
+    unique_tracks = deduplicate_tracks(all_tracks)
+    return unique_tracks
 
 
 def load_tracks_to_db(tracks, db_conn):
@@ -258,10 +291,13 @@ if __name__ == '__main__':
     
     artists = fetch_artists(seeds, spotify)
     print("artists_size: ",len(artists))
+
     albums = fetch_albums_for_all_artists(artists, spotify)
     print("albums_size: ",len(albums))
+
     tracks = fetch_tracks_for_all_albums(albums, spotify)
     print("tracks_size: ",len(tracks))
+
     track_features = fetch_features_for_all_tracks(tracks, spotify)
     print("track_features_size: ",len(track_features))
 
@@ -275,10 +311,6 @@ if __name__ == '__main__':
     load_tracks_to_db(tracks, db_conn)
     load_tracks_features_to_db(track_features, db_conn)
     print("finished loading to db!!!")
-
-    
-
-    # print(len(albums))
 
     # res = spotify.album_tracks(album_id='2FfewmvnA0wctMD64KjOxP', limit=50, offset=0)
     # pprint.pprint(res['items'][0])
