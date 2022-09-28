@@ -269,6 +269,10 @@ def fetch_features_for_all_tracks(tracks, spotify):
 
 def load_tracks_features_to_db(tracks_features, db_conn):
     tracks_features_df = pd.DataFrame(tracks_features)
+
+    # Evaluate nulls.
+    print('Number of NaN in track_features DF: ', tracks_features_df.isna().sum().sum())
+
     tracks_features_df.to_sql(
         name='track_feature', 
         con=db_conn, 

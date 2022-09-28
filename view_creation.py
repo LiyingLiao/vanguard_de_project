@@ -143,7 +143,7 @@ def create_artist_features_over_time_view(cur):
                 select
                     a.artist_name as artist_name,
                     CASE
-                        WHEN  CAST(strftime('%Y', al.release_date) as INTEGER)  < 0 THEN al.release_date
+                        WHEN CAST(strftime('%Y', al.release_date) as INTEGER)  < 0 THEN al.release_date
                         ELSE strftime('%Y', al.release_date)
                     end as release_year,
                     t.song_name as song_name,
