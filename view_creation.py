@@ -92,6 +92,45 @@ def create_top_songs_by_artist_tempo_view(cur):
             ORDER BY artist_name ASC, tempo DESC
     ''')
 
+def create_avg_feature_value_per_group_view(cur):
+    cur.execute('''
+        DROP VIEW IF EXISTS v_avg_feature_value_per_popularity_group
+    ''')
+    
+    cur.execute('''
+        CREATE VIEW v_avg_feature_value_per_popularity_group
+        AS
+            WITH artist_with_popularity_group AS (
+                SELECT 
+                    *,
+                    CASE  
+                        WHEN popularity >= 90 THEN 'high'
+                        WHEN popularity >= 80 THEN 'medium'
+                        ELSE 'low'
+                    END AS popularity_group
+                FROM artist
+            ), song_feature_with_popularity_group AS (
+                SELECT 
+                    a.popularity_group AS popularity_group,
+                    tf.energy AS energy,
+                    tf.danceability AS danceability,
+                    tf.instrumentalness AS instrumentalness,
+                    tf.liveness AS liveness
+                FROM artist_with_popularity_group AS a 
+                    INNER JOIN album AS al ON (a.artist_id = al.artist_id)
+                    INNER JOIN track AS t ON (al.album_id = t.album_id)
+                    INNER JOIN track_feature AS tf ON (t.track_id = tf.track_id)
+            )
+            SELECT
+                popularity_group,
+                AVG(energy) AS avg_energy,
+                AVG(danceability) AS avg_danceability,
+                AVG(instrumentalness) AS avg_instrumentalness,
+                AVG(liveness) AS avg_liveness
+            FROM song_feature_with_popularity_group
+            GROUP BY popularity_group
+    ''')
+
 if __name__ == '__main__':
     db_conn = sqlite3.connect('spotify.db')
     cur = db_conn.cursor()
@@ -106,3 +145,6 @@ if __name__ == '__main__':
 
     create_top_songs_by_artist_tempo_view(cur)
     print('Created top songs by artist tempo view')
+
+    create_avg_feature_value_per_group_view(cur)
+    print('Created average feature value by popularity group view')
