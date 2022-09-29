@@ -104,9 +104,11 @@ def create_avg_feature_value_per_group_view(cur):
                 SELECT 
                     *,
                     CASE  
-                        WHEN popularity >= 90 THEN 'high'
-                        WHEN popularity >= 80 THEN 'medium'
-                        ELSE 'low'
+                        WHEN popularity >= 95 THEN 'tier_1'
+                        WHEN popularity >= 90 THEN 'tier_2'
+                        WHEN popularity >= 85 THEN 'tier_3'
+                        WHEN popularity >= 80 THEN 'tier_4'
+                        ELSE 'tier_5'
                     END AS popularity_group
                 FROM artist
             ), song_feature_with_popularity_group AS (
@@ -123,12 +125,13 @@ def create_avg_feature_value_per_group_view(cur):
             )
             SELECT
                 popularity_group,
-                AVG(energy) AS avg_energy,
-                AVG(danceability) AS avg_danceability,
-                AVG(instrumentalness) AS avg_instrumentalness,
-                AVG(liveness) AS avg_liveness
+                ROUND(AVG(energy), 4) AS avg_energy,
+                ROUND(AVG(danceability), 4) AS avg_danceability,
+                ROUND(AVG(instrumentalness), 4) AS avg_instrumentalness,
+                ROUND(AVG(liveness), 4) AS avg_liveness
             FROM song_feature_with_popularity_group
             GROUP BY popularity_group
+            ORDER BY popularity_group ASC
     ''')
 
 def create_artist_features_over_time_view(cur):
@@ -189,3 +192,4 @@ if __name__ == '__main__':
     print('Created average feature value by popularity group view')
 
     create_artist_features_over_time_view(cur)
+    print('Created artist features over time view')
