@@ -14,7 +14,7 @@ def plot_features_of_an_artist_over_time(conn, artist_name='Ed Sheeran'):
             avg_liveness AS liveness,
             avg_valence AS valence
         FROM v_artist_features_over_time
-        WHERE artist_name = {artist_name}
+        WHERE artist_name = '{artist_name}'
     '''
     df = pd.read_sql_query(sql=query, con=conn)
     point_plot = sns.pointplot(

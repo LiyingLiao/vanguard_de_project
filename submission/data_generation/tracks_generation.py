@@ -66,6 +66,8 @@ def fetch_tracks_for_all_albums(albums, spotify):
 
     all_tracks = list(np.concatenate(all_tracks_nested).flat)
     unique_tracks = deduplicate_tracks(all_tracks)
+
+    print(f'Number of tracks: all {len(all_tracks)} -> unique {len(unique_tracks)}')
     return unique_tracks
 
 

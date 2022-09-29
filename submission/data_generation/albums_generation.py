@@ -69,6 +69,8 @@ def fetch_albums_for_all_artists(artists, spotify):
 
     all_albums = list(np.concatenate(all_albums_nested).flat)
     unique_albums = deduplicate_albums(all_albums)
+
+    print(f'Number of albums: all {len(all_albums)} -> unique {len(unique_albums)}')
     return unique_albums
 
 # Load the albums into database's album table.

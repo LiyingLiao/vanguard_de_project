@@ -1,3 +1,10 @@
+# High level overview:
+#
+# 1) Delete v_features_per_popularity_group if exists. This ensures complete overwrite when rerun.
+# 2) Based on artist popularity, assign popularity group to each artist.
+# 3) Join artist (with popularity group) with album + track + track feature to link track features to artists.
+# 4) Group by popularity_group and compute group level features (e.g. number of artists, average energy)
+# 5) Sort by popularity_group in ascending order. Note that smaller tier number represents higher popularity.
 def create_features_per_popularity_group_view(cur):
     cur.execute('''
         DROP VIEW IF EXISTS v_features_per_popularity_group
@@ -19,15 +26,15 @@ def create_features_per_popularity_group_view(cur):
                 FROM artist
             ), song_feature_with_popularity_group AS (
                 SELECT 
-                    a.popularity_group AS popularity_group,
-                    a.artist_name AS artist_name,
-                    al.album_name AS album_name,
-                    t.song_name AS song_name,
-                    tf.energy AS energy,
-                    tf.danceability AS danceability,
-                    tf.instrumentalness AS instrumentalness,
-                    tf.liveness AS liveness,
-                    tf.valence AS valence
+                    a.popularity_group,
+                    a.artist_name,
+                    al.album_name,
+                    t.song_name,
+                    tf.energy,
+                    tf.danceability,
+                    tf.instrumentalness,
+                    tf.liveness,
+                    tf.valence
                 FROM artist_with_popularity_group AS a 
                     INNER JOIN album AS al ON (a.artist_id = al.artist_id)
                     INNER JOIN track AS t ON (al.album_id = t.album_id)

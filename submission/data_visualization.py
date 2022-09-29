@@ -5,6 +5,10 @@ from data_visualization.plot_features_per_popularity_group import *
 from data_visualization.plot_counts_per_popularity_group import *
 from data_visualization.plot_features_of_an_artist_over_time import *
 
+'''
+Run this file to create the visualizations.
+'''
+
 if __name__ == '__main__':
     conn = sqlite3.connect("spotify.db")
     print('Connected to database')
