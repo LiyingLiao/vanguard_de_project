@@ -24,7 +24,7 @@ if __name__ == '__main__':
     plots.append(plot_features_per_popularity_group(conn))
     print('Plotted features per popularity group')
 
-    print('Number of plots: ' len(plots))
+    print('Number of plots: ', len(plots))
 
     with PdfPages('visualization.pdf') as pdf_pages:
         for plot in plots:
