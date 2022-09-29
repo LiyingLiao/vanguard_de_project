@@ -1,3 +1,5 @@
+import pandas as pd
+
 '''
 Functions related to artists dataset generation.
 '''
@@ -70,6 +72,10 @@ def fetch_artists(artist_names, spotify):
 # db_conn: a database connection.
 def load_artists_to_db(artists, db_conn):
     artists_df = pd.DataFrame(artists)
+
+    # Evaluate Nones.
+    print('Number of NaN in artists DF: ', artists_df.isna().sum().sum())
+
     artists_df.to_sql(
         name='artist', 
         con=db_conn, 

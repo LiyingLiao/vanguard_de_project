@@ -55,8 +55,8 @@ def main():
 
     avg_feature_value_per_popularity_group.set(xlabel="Popularity Group", ylabel= "Features", title='Features Trend Among Popularity Groups')
 
-    for feature in avg_feature_value_per_popularity_group.containers:
-        avg_feature_value_per_popularity_group.bar_label(feature,)
+    # for feature in avg_feature_value_per_popularity_group.containers:
+    #     avg_feature_value_per_popularity_group.bar_label(feature,)
 
     plt.show()
     # plt.savefig('Top_10_Artists_By_Followers.pdf')
