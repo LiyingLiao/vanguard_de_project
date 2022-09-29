@@ -2,7 +2,7 @@ import sqlite3
 from view_creation.top_artists_by_followers import *
 from view_creation.top_songs_by_artist_duration import *
 from view_creation.top_songs_by_artist_tempo import *
-from view_creation.avg_feature_value_per_group import *
+from view_creation.features_per_popularity_group import *
 from view_creation.artist_features_over_time import *
 
 '''
@@ -24,8 +24,8 @@ if __name__ == '__main__':
     create_top_songs_by_artist_tempo_view(cur)
     print('Created top songs by artist tempo view')
 
-    create_avg_feature_value_per_group_view(cur)
-    print('Created average feature value by popularity group view')
+    create_features_per_popularity_group_view(cur)
+    print('Created features per popularity group view')
 
     create_artist_features_over_time_view(cur)
     print('Created artist features over time view')

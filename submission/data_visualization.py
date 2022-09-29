@@ -1,66 +1,162 @@
 import sqlite3
-import pandas
+import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
-
-# tips = sns.load_dataset("tips")
-# g = sns.relplot(data=tips, x="total_bill", y="tip")
-# g.ax.axline(xy1=(10, 2), slope=.2, color="b", dashes=(5, 2))
-
-
-class spotify_db:
-
-    def __init__(self):
-        self.conn = self.load_db()
-        self.cursor = self.conn.cursor()
-
-    def load_db(self):
-        conn = sqlite3.connect("spotify.db")
-        return conn
-
-    def query_ds(self, query: str):
-        df = pandas.read_sql_query(sql=query, con=self.conn)
-        # df = pandas.read_sql_table(table_name="artist", con=self.conn)
-        return df
-
-
-def main():
-    db = spotify_db()
-
-    # # Create visualization for top 10 artists by followers
-    # query1 = "SELECT artist_name, (followers/1000000) AS followers FROM v_top_artists_by_followers LIMIT 10"
-    # # "SELECT artist_name, followers FROM artist ORDER BY followers DESC LIMIT 10"
-    # top_artists_by_followers_df = db.query_ds(query1)
-
-    # top_10_artists_by_followers = sns.barplot(data=top_artists_by_followers_df, x="artist_name", y="followers", palette="rocket")
-    # top_10_artists_by_followers.set(xlabel="Artist Name", ylabel= "Followers (in millions)", title='Top 10 Artists By Followers')
-
-    # top_10_artists_by_followers.bar_label(top_10_artists_by_followers.containers[0])
-
-    # for followers in top_10_artists_by_followers.containers:
-    #     top_10_artists_by_followers.bar_label(followers,)
-
-    # plt.show()
-    # plt.savefig('Top_10_Artists_By_Followers.png')
-
+# Plot a bar chart showing the top artists in terms of followers.
+def plot_top_artists_by_followers(conn):
+    # sns.set(rc={'figure.figsize':(15,8.27)})
     
-    # Create visualization for 
-    query2 = "SELECT popularity_group, ROUND(avg_energy, 4), ROUND(avg_danceability, 4), ROUND(avg_instrumentalness, 4), ROUND(avg_liveness, 4) FROM v_avg_feature_value_per_popularity_group"
-    avg_feature_value_per_popularity_group_df = db.query_ds(query2)
+    query = '''
+        SELECT 
+            artist_name, 
+            (followers/1000000) AS followers 
+        FROM v_top_artists_by_followers 
+        LIMIT 10
+    '''
+    df = pd.read_sql_query(sql=query, con=conn)
 
-    # avg_feature_value_per_popularity_group = sns.lineplot(data=avg_feature_value_per_popularity_group_df)
-    avg_feature_value_per_popularity_group = sns.lineplot(x='popularity_group', y='value', hue='variable', 
-             data=pandas.melt(avg_feature_value_per_popularity_group_df, ['popularity_group']))
+    bar_plot = sns.barplot(data=df, x='artist_name', y='followers', palette='rocket')
+    # Adjust the figure size.
+    bar_plot.figure.set_size_inches(15, 8.27)
+    bar_plot.set(
+        xlabel='Artist Name', 
+        ylabel='Followers (in millions)', 
+        title='Top 10 Artists By Followers'
+    )
 
-    avg_feature_value_per_popularity_group.set(xlabel="Popularity Group", ylabel= "Features", title='Features Trend Among Popularity Groups')
+    # The first container has the follower numbers. Use them as the bar labels.
+    followers = bar_plot.containers[0]
+    bar_plot.bar_label(followers)
+    
+    plt.close()
+    return bar_plot
 
-    # for feature in avg_feature_value_per_popularity_group.containers:
-    #     avg_feature_value_per_popularity_group.bar_label(feature,)
+# Plot a point chart showing features per popularity group.
+def plot_features_per_popularity_group(conn):
+    query = '''
+        SELECT 
+            case
+                when popularity_group = 'tier_1' then '95+'
+                when popularity_group = 'tier_2' then '90+'
+                when popularity_group = 'tier_3' then '85+'
+                when popularity_group = 'tier_4' then '80+'
+                else '80-'
+            end as popularity_group,
+            avg_energy AS energy,
+            avg_danceability AS danceability,
+            avg_liveness AS liveness,
+            avg_valence AS valence
+        FROM v_features_per_popularity_group
+    '''
+    df = pd.read_sql_query(sql=query, con=conn)
+    point_plot = sns.pointplot(
+            x='popularity_group', 
+            y='value', 
+            hue='feature', 
+            data=pd.melt(df, id_vars='popularity_group', var_name='feature')
+        )
+    
+    point_plot.set(
+        xlabel="Popularity Group", 
+        ylabel= "Value", 
+        title='Features Trend Among Popularity Groups'
+    )
 
-    plt.show()
-    # plt.savefig('Top_10_Artists_By_Followers.pdf')
+    point_plot.legend(fontsize=8)
+    sns.move_legend(point_plot, "center right")
+    
+    plt.close()
+    return point_plot
 
+# Plot a multi bar chart showing artists and albums counts per popularity group.
+def plot_counts_per_popularity_group(conn):
+    query = '''
+        SELECT 
+            case
+                when popularity_group = 'tier_1' then '95+'
+                when popularity_group = 'tier_2' then '90+'
+                when popularity_group = 'tier_3' then '85+'
+                when popularity_group = 'tier_4' then '80+'
+                else '80-'
+            end as popularity_group,
+            num_artists AS artists,
+            num_albums AS albums
+        FROM v_features_per_popularity_group
+    '''
+    df = pd.read_sql_query(sql=query, con=conn)
+    cat_df = pd.melt(df, id_vars='popularity_group', var_name='category', value_name='count')
+    cat_plot = sns.catplot(x='popularity_group', y='count', hue='category', data=cat_df, kind='bar')
 
-if __name__ == "__main__":
-    main()
+    # Adjust the figure size.
+    cat_plot.figure.set_size_inches(10, 10)
+
+    cat_plot.set(
+        xlabel='Popularity Group', 
+        ylabel='Count', 
+        title='Number of Artists and Albums in Each Popularity Group'
+    )
+
+    ax = cat_plot.facet_axis(0, 0)
+    for c in ax.containers:
+        ax.bar_label(c, padding=1.0)
+    
+    plt.close()
+    return cat_plot
+
+# Plot a point chart showing features for an artist over time.
+def plot_features_of_an_artist_over_time(conn):
+    query = '''
+        SELECT
+            year,
+            avg_danceability AS danceability,
+            avg_energy AS energy,
+            avg_liveness AS liveness,
+            avg_valence AS valence
+        FROM v_artist_features_over_time
+        WHERE artist_name = 'Ed Sheeran'
+    '''
+    df = pd.read_sql_query(sql=query, con=conn)
+    point_plot = sns.pointplot(
+            x='year', 
+            y='value', 
+            hue='feature', 
+            data=pd.melt(df, id_vars='year', var_name='feature')
+        )
+
+    point_plot.set(
+        xlabel="Year", 
+        ylabel= "Value", 
+        title='Song Features for Ed Sheeran Over The Years'
+    )
+
+    point_plot.legend(fontsize=8)
+    sns.move_legend(point_plot, 'best')
+    
+    plt.close()
+    return point_plot
+
+if __name__ == '__main__':
+    conn = sqlite3.connect("spotify.db")
+    print('Connected to database')
+
+    plots = []
+
+    plots.append(plot_top_artists_by_followers(conn))
+    print('Plotted top artists by followers')
+
+    plots.append(plot_features_of_an_artist_over_time(conn))
+    print('Plotted features of an artist over time')
+
+    plots.append(plot_counts_per_popularity_group(conn))
+    print('Plotted counts per popularity group')
+
+    plots.append(plot_features_per_popularity_group(conn))
+    print('Plotted features per popularity group')
+
+    print(len(plots))
+
+    with PdfPages('visualization.pdf') as pdf_pages:
+        for plot in plots:
+            pdf_pages.savefig(plot.figure)
