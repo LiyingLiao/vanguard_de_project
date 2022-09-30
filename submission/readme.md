@@ -27,10 +27,13 @@ python -m pip install --upgrade pip
 # 4. Install dependencies from requirements.txt 
 pip install -r requirements.txt
 
-# 5 Set up required environmental variables
+# 5. Set up required environmental variables
 export SPOTIPY_CLIENT_ID=<your Spotify API client ID>
 export SPOTIPY_CLIENT_SECRET=<your Spotify API client secret>
 export SPOTIPY_REDIRECT_URI=http://localhost:8888/callback
+
+# 6. Go into the submission folder
+cd submission
 ```
 
 > **Note**: Follow this [Onramp guide](https://github.com/onramp-io/vanguard_de_project#getting-spotify-authentication-credentials) to set up your own API client_id and client_secret
@@ -38,14 +41,14 @@ export SPOTIPY_REDIRECT_URI=http://localhost:8888/callback
 ### Step 3 - Generate data
 At this point, you should've set up your environment. Run the following command to generate the datasets and load them into a sqlite database:
 ```bash
-python submission/data_generation.py
+python data_generation.py
 ```
 You should see a `spotify.db` file under the `submission/` folder. This is the database which you can query with tools such as [DB browser for SQLite](https://sqlitebrowser.org/).
 
 ### Step 4 - Create views
 Run the following command to create the views:
 ```bash
-python submission/view_creation.py
+python view_creation.py
 ```
 The following views should've been created inside the database:
 
@@ -58,7 +61,7 @@ The following views should've been created inside the database:
 ### Step 5 - Generate visualization
 Run the following command to generate the visualization:
 ```bash
-python submission/data_visualization.py
+python data_visualization.py
 ```
 A PDF called `visualization.pdf` should've been created under the `submission/` folder. It includes a few plots based on the `views` you generated in step 4.
 
