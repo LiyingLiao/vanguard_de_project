@@ -1,5 +1,7 @@
 # Submission Readme
 
+**Author**: Liying Liao
+
 ## Context
 This is a take home project for the 2022 Vanguard data engineering apprenticeship interview.
 
