@@ -31,7 +31,7 @@ def plot_counts_per_popularity_group(conn):
     cat_plot.figure.set_size_inches(10, 10)
 
     cat_plot.set(
-        xlabel="Popularity Group",
+        xlabel="Popularity Group (based on artist popularity value)",
         ylabel="Count",
         title="Number of Artists and Albums in Each Popularity Group",
     )

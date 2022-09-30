@@ -30,7 +30,7 @@ def plot_features_per_popularity_group(conn):
     )
 
     point_plot.set(
-        xlabel="Popularity Group",
+        xlabel="Popularity Group (based on artist popularity value)",
         ylabel="Value",
         title="Features Trend Among Popularity Groups",
     )
