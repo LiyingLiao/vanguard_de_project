@@ -25,7 +25,7 @@ source .venv/bin/activate # macOS
 python -m pip install --upgrade pip
 
 # 4. Install dependencies from requirements.txt 
-pip install -r requirements.txt
+pip install -r submission/requirements.txt
 
 # 5. Set up required environmental variables
 export SPOTIPY_CLIENT_ID=<your Spotify API client ID>
