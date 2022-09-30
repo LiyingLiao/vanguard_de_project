@@ -22,11 +22,11 @@ if __name__ == '__main__':
     plots.append(plot_features_of_an_artist_over_time(conn))
     print('Plotted features of an artist over time')
 
-    plots.append(plot_counts_per_popularity_group(conn))
-    print('Plotted counts per popularity group')
-
     plots.append(plot_features_per_popularity_group(conn))
     print('Plotted features per popularity group')
+
+    plots.append(plot_counts_per_popularity_group(conn))
+    print('Plotted counts per popularity group')
 
     print('Number of plots: ', len(plots))
 
