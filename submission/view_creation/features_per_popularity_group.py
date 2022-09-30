@@ -6,11 +6,14 @@
 # 4) Group by popularity_group and compute group level features (e.g. number of artists, average energy)
 # 5) Sort by popularity_group in ascending order. Note that smaller tier number represents higher popularity.
 def create_features_per_popularity_group_view(cur):
-    cur.execute('''
+    cur.execute(
+        """
         DROP VIEW IF EXISTS v_features_per_popularity_group
-    ''')
-    
-    cur.execute('''
+    """
+    )
+
+    cur.execute(
+        """
         CREATE VIEW v_features_per_popularity_group
         AS
             WITH artist_with_popularity_group AS (
@@ -53,4 +56,5 @@ def create_features_per_popularity_group_view(cur):
             FROM song_feature_with_popularity_group
             GROUP BY popularity_group
             ORDER BY popularity_group ASC
-    ''')
+    """
+    )

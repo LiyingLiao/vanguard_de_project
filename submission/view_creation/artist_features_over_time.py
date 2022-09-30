@@ -7,11 +7,14 @@
 # 5) Aggregate the groups to get per artist + year features
 # 6) Sort by artist names in ascending order and years in ascending order.
 def create_artist_features_over_time_view(cur):
-    cur.execute('''
+    cur.execute(
+        """
         DROP VIEW IF EXISTS v_artist_features_over_time
-    ''')
-    
-    cur.execute('''
+    """
+    )
+
+    cur.execute(
+        """
         CREATE VIEW v_artist_features_over_time
         AS
             WITH artist_song_with_year AS (
@@ -43,4 +46,5 @@ def create_artist_features_over_time_view(cur):
             FROM artist_song_with_year
             GROUP BY artist_name, release_year
             ORDER BY artist_name ASC, year ASC
-    ''')
+    """
+    )
